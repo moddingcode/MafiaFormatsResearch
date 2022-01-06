@@ -208,7 +208,7 @@ namespace MafiaResearch.Mafia2.Navigation.NavData
         public Vector3 StartVertex { get; set; }
         public Vector3 EndVertex { get; set; }
 
-        public readonly WeakReference<AiMeshNavFloor> AdjacentFloor = new WeakReference<AiMeshNavFloor>(null);
+        public AiMeshNavFloor AdjacentFloor { get; set; } = null;
 
         public void Read(Stream input, AiMeshReadContext readContext, bool isBigEndian = false)
         {
@@ -241,15 +241,7 @@ namespace MafiaResearch.Mafia2.Navigation.NavData
             output.Write(0xFFFFFFFF, isBigEndian); // adjacentFloor offset placeholder
             output.Write(0xFFFFFFFF, isBigEndian); // adjacentFloor size placeholder
 
-            AiMeshNavFloor floor;
-            if (AdjacentFloor.TryGetTarget(out floor))
-            {
-                writeContext.RegisterFloorForDelayedFixupInCellBoundaryEdges(floor, adjacentFloorOffset);
-            }
-            else
-            {
-                throw new IOException("Unexpected empty AdjacentFloor reference during the serialization");
-            }
+            writeContext.RegisterFloorForDelayedFixupInCellBoundaryEdges(AdjacentFloor, adjacentFloorOffset);
         }
     }
 
@@ -634,8 +626,7 @@ namespace MafiaResearch.Mafia2.Navigation.NavData
             foreach (var edgeToFloorOffsetPair in _cellBoundaryHalfEdgeToAdjacentFloorOffset)
             {
                 var edge = edgeToFloorOffsetPair.Key;
-                var floor = _offsetToNavFloor[edgeToFloorOffsetPair.Value];
-                edge.AdjacentFloor.SetTarget(floor);
+                edge.AdjacentFloor = _offsetToNavFloor[edgeToFloorOffsetPair.Value];
             }
         }
 
